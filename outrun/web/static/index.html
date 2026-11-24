@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Outrun the Earthquake (simulation)</title>
+  <link rel="icon" href="data:,">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800&family=Inter:wght@400;500;600&display=swap">
+  <link rel="stylesheet" href="static/style.css">
+</head>
+<body>
+  <div class="banner" role="note">
+    <span class="banner-tag">Simulation</span>
+    <span>SIMULATION for learning. Not a real warning system and not Google's software.</span>
+    <!--web-note-->
+  </div>
+
+  <header class="top">
+    <div class="title-block">
+      <h1>Outrun the Earthquake</h1>
+      <p class="tagline">Phones near an earthquake feel the first, weaker wave and report it.
+        A server works out where the quake started and sends a warning before the strong shaking arrives.</p>
+    </div>
+    <p id="instruction" class="instruction" aria-live="polite"><span class="pulse" aria-hidden="true"></span><span id="instruction-text">Loading the simulated region…</span></p>
+  </header>
+
+  <main class="stage">
+    <section class="map-card" aria-label="Simulation map">
+      <div class="map-frame">
+        <canvas id="map" width="640" height="640" aria-label="Map of the simulated region. Click to start an earthquake; drag the person marked You."></canvas>
+      </div>
+
+      <div class="timeline" id="timeline" aria-live="off">
+        <div class="timeline-head">
+          <span class="timeline-title">The race</span>
+          <span id="clock" class="clock">t = –</span>
+        </div>
+        <div class="track" id="track">
+          <div class="track-empty" id="track-empty">Start a quake to see the race between the alert and the strong shaking.</div>
+        </div>
+      </div>
+
+      <div class="map-foot">
+        <div class="legend">
+          <span><i class="dot phone"></i>phone</span>
+          <span><i class="dot felt"></i>felt it and reported</span>
+          <span><i class="dot rejected"></i>report rejected by server</span>
+          <span><i class="ring p"></i>P-wave: first, weaker</span>
+          <span><i class="ring s"></i>S-wave: strong shaking</span>
+          <span><i class="mark estimate">+</i>server's estimate (circle: 95 % error)</span>
+          <span><i class="mark truth">★</i>where you started the quake</span>
+          <span><i class="zone"></i>no-warning zone</span>
+        </div>
+        <div class="controls">
+          <button id="replay" class="ghost" disabled>Replay</button>
+          <label class="speed">Speed
+            <select id="speed"><option value="0.25">slow</option><option value="0.5" selected>normal</option><option value="1">fast</option></select>
+          </label>
+        </div>
+      </div>
+    </section>
+
+    <aside class="panel">
+      <div id="alert-box" class="alert-box idle" role="status">No earthquake yet</div>
+      <div id="you-box" class="you-box hidden"></div>
+
+      <dl class="stats">
+        <div class="stat"><dt>Alert sent</dt><dd id="n-alert">–</dd></div>
+        <div class="stat"><dt>Location off by</dt><dd id="n-error">–</dd></div>
+        <div class="stat"><dt>Your warning <span class="hint">predicted / actual</span></dt><dd id="n-warning">–</dd></div>
+        <div class="stat"><dt>No-warning zone radius</dt><dd id="n-blind">–</dd></div>
+      </dl>
+      <dl class="rows">
+        <div><dt>Reports received by the server</dt><dd id="n-reports">–</dd></div>
+        <div><dt>False alerts at this setting</dt><dd id="n-false">measuring…</dd></div>
+      </dl>
+
+      <section class="card">
+        <div class="card-head">
+          <h2>Reports needed before alerting</h2>
+          <output id="k-value" class="k-value">10</output>
+        </div>
+        <input id="k" type="range" min="4" max="40" step="1" value="10" aria-label="Reports needed before alerting">
+        <div class="range-ends"><span>faster</span><span>more reliable</span></div>
+        <p class="small">Fewer reports = faster alert but more risk of being wrong.
+          More reports = more reliable but later, so more people get no warning.</p>
+      </section>
+
+      <section class="card">
+        <h2>Does it really work?</h2>
+        <p class="small">Runs quakes the server has never seen, from a separate set of random seeds, and shows how far off it was.</p>
+        <button id="hidden-test" class="primary" disabled>Test it blind: 25 quakes you can't see</button>
+        <div id="hidden-result" class="hidden-result"></div>
+        <canvas id="histogram" width="340" height="150" class="hidden" aria-label="Histogram of location errors"></canvas>
+      </section>
+    </aside>
+  </main>
+
+  <section class="how" aria-labelledby="how-title">
+    <h2 id="how-title">How it works</h2>
+    <ol class="steps">
+      <li><h3>Two waves</h3><p>An earthquake sends out two waves. The <b>P-wave</b> travels at about 6 km/s and shakes gently. The <b>S-wave</b> travels at about 3.5 km/s and brings the strong shaking.</p></li>
+      <li><h3>Phones report</h3><p>Phones near the quake feel the P-wave first and send a tiny report: their rough area (a 2 km square) and the time.</p></li>
+      <li><h3>The server works it out</h3><p>The server never sees the earthquake. From the report times alone it works out where and when it started, like telling where thunder came from by when people heard it. It ignores reports that don't fit (bumped phones), and checks that phones near its answer aren't silent.</p></li>
+      <li><h3>Alert</h3><p>Once at least K reports agree, it sends an alert. Messages travel much faster than the S-wave, so places farther away get seconds of warning.</p></li>
+      <li><h3>Warning time</h3><p>Warning = when the S-wave arrives − when the alert arrives. Close to the quake that is zero or less: the no-warning zone.</p></li>
+    </ol>
+    <p class="small fine">Everything here is simulated: invented towns, simulated phones, a uniform crust, one moderate earthquake. See the project's ASSUMPTIONS.md for every assumption.</p>
+  </section>
+
+  <!--extra-scripts-->
+  <script src="static/app.js"></script>
+</body>
+</html>

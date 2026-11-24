@@ -1,0 +1,7 @@
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+site/
+*.backup-*
+install_outrun_full.py
